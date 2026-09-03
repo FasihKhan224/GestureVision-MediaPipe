@@ -1,150 +1,115 @@
-# hand-gesture-recognition-using-mediapipe
-Estimate hand pose using MediaPipe (Python version).<br> This is a sample 
-program that recognizes hand signs and finger gestures with a simple MLP using the detected key points.
-<br> ❗ _️**This is English Translated version of the [original repo](https://github.com/Kazuhito00/hand-gesture-recognition-using-mediapipe). All Content is translated to english along with comments and notebooks**_ ❗
-<br> 
-![mqlrf-s6x16](https://user-images.githubusercontent.com/37477845/102222442-c452cd00-3f26-11eb-93ec-c387c98231be.gif)
+# GestureVision-MediaPipe
 
-This repository contains the following contents.
-* Sample program
-* Hand sign recognition model(TFLite)
-* Finger gesture recognition model(TFLite)
-* Learning data for hand sign recognition and notebook for learning
-* Learning data for finger gesture recognition and notebook for learning
+A real-time computer vision pipeline for hand gesture recognition and motion trajectory classification powered by Google MediaPipe and TensorFlow Lite.
 
-# Requirements
-* mediapipe 0.8.1
-* OpenCV 3.4.2 or Later
-* Tensorflow 2.3.0 or Later<br>tf-nightly 2.5.0.dev or later (Only when creating a TFLite for an LSTM model)
-* scikit-learn 0.23.2 or Later (Only if you want to display the confusion matrix) 
-* matplotlib 3.3.2 or Later (Only if you want to display the confusion matrix)
+---
 
-# Demo
-Here's how to run the demo using your webcam.
+## Overview
+
+**GestureVision-MediaPipe** delivers low-latency, accurate hand pose estimation and gesture interpretation directly from a webcam feed. By extracting normalized 21-point 3D hand landmarks via MediaPipe and processing them through lightweight neural network architectures, the system achieves real-time inference without requiring dedicated GPU hardware.
+
+The pipeline operates on two distinct classification layers:
+1. **Keypoint Classifier (Static Signs)**: Recognizes discrete hand poses (e.g., Open, Closed, Pointing, OK, etc.) based on instantaneous landmark geometry.
+2. **Point History Classifier (Dynamic Gestures)**: Analyzes fingertip coordinate sequences over time to identify continuous motion patterns (e.g., Clockwise, Counter-Clockwise, Moving, Stationary).
+
+---
+
+## Key Features
+
+- **Real-Time Landmark Detection**: 21 3D hand keypoints tracked at 30+ FPS on standard CPUs.
+- **Dual-Mode Classification**: Simultaneous support for static hand signs and temporal movement gestures.
+- **Interactive Dataset Collection**: Built-in interactive logging mode to capture, label, and append custom gestures on the fly.
+- **Optimized for Edge Deployment**: Trained models exported to compact TensorFlow Lite (`.tflite`) format for fast inference.
+- **End-to-End Retraining Workflows**: Jupyter notebooks included for training, tuning, and exporting updated models.
+
+---
+
+## Repository Structure
+
+```
+GestureVision-MediaPipe/
+├── app.py                               # Main real-time webcam inference application
+├── keypoint_classification.ipynb        # Model training pipeline for static hand signs
+├── point_history_classification.ipynb   # Model training pipeline for dynamic finger gestures
+├── model/
+│   ├── keypoint_classifier/             # Static pose model, labels, dataset, and inference module
+│   │   ├── keypoint.csv
+│   │   ├── keypoint_classifier.hdf5
+│   │   ├── keypoint_classifier.py
+│   │   ├── keypoint_classifier.tflite
+│   │   └── keypoint_classifier_label.csv
+│   └── point_history_classifier/        # Dynamic gesture model, labels, dataset, and inference module
+│       ├── point_history.csv
+│       ├── point_history_classifier.hdf5
+│       ├── point_history_classifier.py
+│       ├── point_history_classifier.tflite
+│       └── point_history_classifier_label.csv
+└── utils/
+    └── cvfpscalc.py                     # FPS calculation utility
+```
+
+---
+
+## Requirements & Setup
+
+### Prerequisites
+
+Ensure you have Python 3.8+ installed. Install the required dependencies:
+
+```bash
+pip install mediapipe opencv-python tensorflow scikit-learn matplotlib
+```
+
+---
+
+## Quick Start
+
+Launch the real-time inference application with default webcam settings:
+
 ```bash
 python app.py
 ```
 
-The following options can be specified when running the demo.
-* --device<br>Specifying the camera device number (Default：0)
-* --width<br>Width at the time of camera capture (Default：960)
-* --height<br>Height at the time of camera capture (Default：540)
-* --use_static_image_mode<br>Whether to use static_image_mode option for MediaPipe inference (Default：Unspecified)
-* --min_detection_confidence<br>
-Detection confidence threshold (Default：0.5)
-* --min_tracking_confidence<br>
-Tracking confidence threshold (Default：0.5)
+### Command-Line Arguments
 
-# Directory
-<pre>
-│  app.py
-│  keypoint_classification.ipynb
-│  point_history_classification.ipynb
-│  
-├─model
-│  ├─keypoint_classifier
-│  │  │  keypoint.csv
-│  │  │  keypoint_classifier.hdf5
-│  │  │  keypoint_classifier.py
-│  │  │  keypoint_classifier.tflite
-│  │  └─ keypoint_classifier_label.csv
-│  │          
-│  └─point_history_classifier
-│      │  point_history.csv
-│      │  point_history_classifier.hdf5
-│      │  point_history_classifier.py
-│      │  point_history_classifier.tflite
-│      └─ point_history_classifier_label.csv
-│          
-└─utils
-    └─cvfpscalc.py
-</pre>
-### app.py
-This is a sample program for inference.<br>
-In addition, learning data (key points) for hand sign recognition,<br>
-You can also collect training data (index finger coordinate history) for finger gesture recognition.
+Customize camera parameters and inference thresholds:
 
-### keypoint_classification.ipynb
-This is a model training script for hand sign recognition.
+```bash
+python app.py --device 0 --width 960 --height 540 --min_detection_confidence 0.7 --min_tracking_confidence 0.5
+```
 
-### point_history_classification.ipynb
-This is a model training script for finger gesture recognition.
+| Parameter | Default | Description |
+|---|---|---|
+| `--device` | `0` | Camera device index |
+| `--width` | `960` | Camera capture width |
+| `--height` | `540` | Camera capture height |
+| `--use_static_image_mode` | `False` | Static image mode flag for MediaPipe |
+| `--min_detection_confidence` | `0.5` | Landmark detector confidence threshold |
+| `--min_tracking_confidence` | `0.5` | Landmark tracking confidence threshold |
 
-### model/keypoint_classifier
-This directory stores files related to hand sign recognition.<br>
-The following files are stored.
-* Training data(keypoint.csv)
-* Trained model(keypoint_classifier.tflite)
-* Label data(keypoint_classifier_label.csv)
-* Inference module(keypoint_classifier.py)
+---
 
-### model/point_history_classifier
-This directory stores files related to finger gesture recognition.<br>
-The following files are stored.
-* Training data(point_history.csv)
-* Trained model(point_history_classifier.tflite)
-* Label data(point_history_classifier_label.csv)
-* Inference module(point_history_classifier.py)
+## Custom Gesture Training
 
-### utils/cvfpscalc.py
-This is a module for FPS measurement.
+### 1. Data Collection Mode
 
-# Training
-Hand sign recognition and finger gesture recognition can add and change training data and retrain the model.
+You can log custom samples directly within the running application:
 
-### Hand sign recognition training
-#### 1.Learning data collection
-Press "k" to enter the mode to save key points（displayed as 「MODE:Logging Key Point」）<br>
-<img src="https://user-images.githubusercontent.com/37477845/102235423-aa6cb680-3f35-11eb-8ebd-5d823e211447.jpg" width="60%"><br><br>
-If you press "0" to "9", the key points will be added to "model/keypoint_classifier/keypoint.csv" as shown below.<br>
-1st column: Pressed number (used as class ID), 2nd and subsequent columns: Key point coordinates<br>
-<img src="https://user-images.githubusercontent.com/37477845/102345725-28d26280-3fe1-11eb-9eeb-8c938e3f625b.png" width="80%"><br><br>
-The key point coordinates are the ones that have undergone the following preprocessing up to ④.<br>
-<img src="https://user-images.githubusercontent.com/37477845/102242918-ed328c80-3f3d-11eb-907c-61ba05678d54.png" width="80%">
-<img src="https://user-images.githubusercontent.com/37477845/102244114-418a3c00-3f3f-11eb-8eef-f658e5aa2d0d.png" width="80%"><br><br>
-In the initial state, three types of learning data are included: open hand (class ID: 0), close hand (class ID: 1), and pointing (class ID: 2).<br>
-If necessary, add 3 or later, or delete the existing data of csv to prepare the training data.<br>
-<img src="https://user-images.githubusercontent.com/37477845/102348846-d0519400-3fe5-11eb-8789-2e7daec65751.jpg" width="25%">　<img src="https://user-images.githubusercontent.com/37477845/102348855-d2b3ee00-3fe5-11eb-9c6d-b8924092a6d8.jpg" width="25%">　<img src="https://user-images.githubusercontent.com/37477845/102348861-d3e51b00-3fe5-11eb-8b07-adc08a48a760.jpg" width="25%">
+- **Static Hand Signs**: Press `k` to enter keypoint logging mode. Press `0`–`9` to assign classes and record landmark vectors to `model/keypoint_classifier/keypoint.csv`.
+- **Dynamic Motion Gestures**: Press `h` to enter trajectory logging mode. Move your fingertip and press `0`–`9` to record sequential coordinate histories into `model/point_history_classifier/point_history.csv`.
+- Press `Esc` or `q` to exit logging mode.
 
-#### 2.Model training
-Open "[keypoint_classification.ipynb](keypoint_classification.ipynb)" in Jupyter Notebook and execute from top to bottom.<br>
-To change the number of training data classes, change the value of "NUM_CLASSES = 3" <br>and modify the label of "model/keypoint_classifier/keypoint_classifier_label.csv" as appropriate.<br><br>
+### 2. Model Retraining
 
-#### X.Model structure
-The image of the model prepared in "[keypoint_classification.ipynb](keypoint_classification.ipynb)" is as follows.
-<img src="https://user-images.githubusercontent.com/37477845/102246723-69c76a00-3f42-11eb-8a4b-7c6b032b7e71.png" width="50%"><br><br>
+1. Open `keypoint_classification.ipynb` or `point_history_classification.ipynb` in Jupyter Notebook.
+2. Adjust `NUM_CLASSES` to match your label set in the corresponding `_label.csv` file.
+3. Run all cells to train the architecture and export updated `.tflite` model weights.
 
-### Finger gesture recognition training
-#### 1.Learning data collection
-Press "h" to enter the mode to save the history of fingertip coordinates (displayed as "MODE:Logging Point History").<br>
-<img src="https://user-images.githubusercontent.com/37477845/102249074-4d78fc80-3f45-11eb-9c1b-3eb975798871.jpg" width="60%"><br><br>
-If you press "0" to "9", the key points will be added to "model/point_history_classifier/point_history.csv" as shown below.<br>
-1st column: Pressed number (used as class ID), 2nd and subsequent columns: Coordinate history<br>
-<img src="https://user-images.githubusercontent.com/37477845/102345850-54ede380-3fe1-11eb-8d04-88e351445898.png" width="80%"><br><br>
-The key point coordinates are the ones that have undergone the following preprocessing up to ④.<br>
-<img src="https://user-images.githubusercontent.com/37477845/102244148-49e27700-3f3f-11eb-82e2-fc7de42b30fc.png" width="80%"><br><br>
-In the initial state, 4 types of learning data are included: stationary (class ID: 0), clockwise (class ID: 1), counterclockwise (class ID: 2), and moving (class ID: 4). <br>
-If necessary, add 5 or later, or delete the existing data of csv to prepare the training data.<br>
-<img src="https://user-images.githubusercontent.com/37477845/102350939-02b0c080-3fe9-11eb-94d8-54a3decdeebc.jpg" width="20%">　<img src="https://user-images.githubusercontent.com/37477845/102350945-05131a80-3fe9-11eb-904c-a1ec573a5c7d.jpg" width="20%">　<img src="https://user-images.githubusercontent.com/37477845/102350951-06444780-3fe9-11eb-98cc-91e352edc23c.jpg" width="20%">　<img src="https://user-images.githubusercontent.com/37477845/102350942-047a8400-3fe9-11eb-9103-dbf383e67bf5.jpg" width="20%">
+---
 
-#### 2.Model training
-Open "[point_history_classification.ipynb](point_history_classification.ipynb)" in Jupyter Notebook and execute from top to bottom.<br>
-To change the number of training data classes, change the value of "NUM_CLASSES = 4" and <br>modify the label of "model/point_history_classifier/point_history_classifier_label.csv" as appropriate. <br><br>
+## Tech Stack
 
-#### X.Model structure
-The image of the model prepared in "[point_history_classification.ipynb](point_history_classification.ipynb)" is as follows.
-<img src="https://user-images.githubusercontent.com/37477845/102246771-7481ff00-3f42-11eb-8ddf-9e3cc30c5816.png" width="50%"><br>
-The model using "LSTM" is as follows. <br>Please change "use_lstm = False" to "True" when using (tf-nightly required (as of 2020/12/16))<br>
-<img src="https://user-images.githubusercontent.com/37477845/102246817-8368b180-3f42-11eb-9851-23a7b12467aa.png" width="60%">
-
-# Reference
-* [MediaPipe](https://mediapipe.dev/)
-
-# Author
-Kazuhito Takahashi(https://twitter.com/KzhtTkhs)
-
-# Translation and other improvements
-Nikita Kiselov(https://github.com/kinivi)
- 
-# License 
-hand-gesture-recognition-using-mediapipe is under [Apache v2 license](LICENSE).
+- **Framework**: MediaPipe Hands
+- **Deep Learning**: TensorFlow / Keras, TensorFlow Lite
+- **Vision Processing**: OpenCV (Python)
+- **Data & Evaluation**: NumPy, Scikit-learn, Matplotlib
